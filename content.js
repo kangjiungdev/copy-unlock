@@ -1,5 +1,3 @@
-showCopyBypassNotice();
-
 document.oncontextmenu = null;
 document.onselectstart = null;
 document.oncopy = null;
@@ -53,8 +51,14 @@ document.querySelectorAll("iframe").forEach((iframe) => {
   } catch (e) {}
 });
 
-(() => {
-  deleteElementIfExist("styleID");
+(async () => {
+  const delElement = await returnElementHasID(
+    "copy-unlock-style-id",
+    "styleID"
+  );
+  if (delElement) {
+    delElement.remove();
+  }
   const style = document.createElement("style");
   setStorageElementID(style, "copy-unlock-style-id", "styleID");
   style.innerHTML = `
@@ -65,10 +69,14 @@ document.querySelectorAll("iframe").forEach((iframe) => {
     user-select: text !important;
 }`;
   document.head.appendChild(style);
+  showCopyUnlockAlertMsg();
 })();
 
-function showCopyBypassNotice() {
-  deleteElementIfExist("alert-msg-id", "alertMsg");
+async function showCopyUnlockAlertMsg() {
+  const delElement = await returnElementHasID("alert-msg-id", "alertMsg");
+  if (delElement) {
+    delElement.remove();
+  }
 
   const alertMsg = document.createElement("div");
   setStorageElementID(alertMsg, "alert-msg-id", "alertMsg");
@@ -78,7 +86,7 @@ function showCopyBypassNotice() {
     position: "fixed",
     top: "20px",
     right: "20px",
-    background: "#2c3e50",
+    background: "#3C3C3C",
     color: "#ecf0f1",
     padding: "12px 20px",
     borderRadius: "8px",
@@ -86,45 +94,51 @@ function showCopyBypassNotice() {
     fontSize: "14px",
     fontWeight: "500",
     zIndex: "99999",
-    animation: "fadeInOut 2s ease forwards",
+    animation: "fadeInOut 1.3s ease forwards",
     pointerEvents: "none",
   });
 
   document.body.appendChild(alertMsg);
 
-  if (!document.getElementById("copy-bypass-style")) {
-    const animStyle = document.createElement("style");
-    animStyle.id = "copy-bypass-style";
-    animStyle.textContent = `
+  if (
+    !(await returnElementHasID("alert-msg-animation-style-id", "animeStyle"))
+  ) {
+    const animeStyle = document.createElement("style");
+    setStorageElementID(
+      animeStyle,
+      "alert-msg-animation-style-id",
+      "animeStyle"
+    );
+    animeStyle.textContent = `
       @keyframes fadeInOut {
         0%   { opacity: 0; transform: translateY(-10px); }
-        10%  { opacity: 1; transform: translateY(0); }
-        90%  { opacity: 1; }
+        15%  { opacity: 1; transform: translateY(0); }
+        80%  { opacity: 1; }
         100% { opacity: 0; transform: translateY(-10px); }
       }
     `;
-    document.head.appendChild(animStyle);
+    document.head.appendChild(animeStyle);
   }
 
   setTimeout(() => {
     alertMsg.remove();
-  }, 2000);
+  }, 1300);
 }
 
-/** element, id, keyName을 받아서 element.id를 id-uuid로 설정하고 크롬 스토리지에 keyName 키 값으로 uuid를 저장 */
+/** element, id(값), keyName을 받아서 element.id를 id(값)-uuid로 설정하고 크롬 스토리지에 keyName 키 값으로 uuid를 저장 */
 function setStorageElementID(element, id, keyName) {
   const uuid = generateUUIDv4();
   element.id = `${id}-${uuid}`;
   chrome.storage.local.set({ [keyName]: uuid });
 }
 
-/** keyName, id 받아서 'id-{keyName에 저장된 벨류}'라는 id를 가진 element가 있으면 해당 element 삭제 */
-function deleteElementIfExist(id, keyName) {
-  chrome.storage.local.get(keyName, (result) => {
-    const element = document.getElementById(`${id}-${result[keyName]}`);
-    if (element) {
-      element.remove();
-    }
+/** id(값), keyName 받아서 'id(값)-{keyName에 저장된 벨류}'라는 id를를 가진 element 반환 */
+function returnElementHasID(id, keyName) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(keyName, (result) => {
+      const element = document.getElementById(`${id}-${result[keyName]}`);
+      resolve(element);
+    });
   });
 }
 
