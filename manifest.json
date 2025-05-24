@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Copy Unlock",
+  "description": "Enable text selection and copy on restricted pages.",
+  "version": "0.1",
+  "permissions": ["scripting", "activeTab"],
+  "action": {
+    "default_icon": "icon.png",
+    "default_title": "Unlock Copy"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
