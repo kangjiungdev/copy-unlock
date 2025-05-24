@@ -52,23 +52,18 @@ document.querySelectorAll("iframe").forEach((iframe) => {
 });
 
 (async () => {
-  const delElement = await returnElementHasID(
-    "copy-unlock-style-id",
-    "styleID"
-  );
-  if (delElement) {
-    delElement.remove();
+  if (!(await returnElementHasID("copy-unlock-style-id", "styleID"))) {
+    const style = document.createElement("style");
+    setStorageElementID(style, "copy-unlock-style-id", "styleID");
+    style.innerHTML = `
+  * {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+  }`;
+    document.head.appendChild(style);
   }
-  const style = document.createElement("style");
-  setStorageElementID(style, "copy-unlock-style-id", "styleID");
-  style.innerHTML = `
-* {
-    -webkit-user-select: text !important;
-    -moz-user-select: text !important;
-    -ms-user-select: text !important;
-    user-select: text !important;
-}`;
-  document.head.appendChild(style);
   showCopyUnlockAlertMsg();
 })();
 
