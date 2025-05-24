@@ -14,7 +14,11 @@ document.body.onmousedown = null;
     window.addEventListener(
       event,
       function (e) {
-        e.stopImmediatePropagation();
+        if (event === "keydown") {
+          if (e.key !== "Enter") {
+            e.stopImmediatePropagation();
+          }
+        }
       },
       true
     );
