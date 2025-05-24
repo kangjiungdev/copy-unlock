@@ -53,15 +53,10 @@ document.querySelectorAll("iframe").forEach((iframe) => {
   } catch (e) {}
 });
 
-if (!window.__copyUnlockUUID) {
-  window.__copyUnlockUUID = generateUUIDv4();
-}
 (() => {
-  const uuid = window.__copyUnlockUUID;
-  const uuidID = `copy-unlock-style-id-${uuid}`;
-  if (document.getElementById(uuidID)) document.getElementById(uuidID).remove();
+  deleteElementIfExist("styleID");
   const style = document.createElement("style");
-  style.id = uuidID;
+  setStorageElementID(style, "copy-unlock-style-id", "styleID");
   style.innerHTML = `
 * {
     -webkit-user-select: text !important;
@@ -73,20 +68,17 @@ if (!window.__copyUnlockUUID) {
 })();
 
 function showCopyBypassNotice() {
-  const existing = document.getElementById("copy-bypass-toast");
-  if (existing) {
-    existing.remove();
-  }
+  deleteElementIfExist("alert-msg-id", "alertMsg");
 
-  const toast = document.createElement("div");
-  toast.id = "copy-bypass-toast";
-  toast.innerText = "복사 방지 해제됨";
+  const alertMsg = document.createElement("div");
+  setStorageElementID(alertMsg, "alert-msg-id", "alertMsg");
+  alertMsg.innerText = "복사 방지 해제됨";
 
-  Object.assign(toast.style, {
+  Object.assign(alertMsg.style, {
     position: "fixed",
     top: "20px",
     right: "20px",
-    background: "#3C3C3C",
+    background: "#2c3e50",
     color: "#ecf0f1",
     padding: "12px 20px",
     borderRadius: "8px",
@@ -94,11 +86,11 @@ function showCopyBypassNotice() {
     fontSize: "14px",
     fontWeight: "500",
     zIndex: "99999",
-    animation: "fadeInOut 1.5s ease forwards",
+    animation: "fadeInOut 2s ease forwards",
     pointerEvents: "none",
   });
 
-  document.body.appendChild(toast);
+  document.body.appendChild(alertMsg);
 
   if (!document.getElementById("copy-bypass-style")) {
     const animStyle = document.createElement("style");
@@ -115,8 +107,25 @@ function showCopyBypassNotice() {
   }
 
   setTimeout(() => {
-    toast.remove();
-  }, 1500);
+    alertMsg.remove();
+  }, 2000);
+}
+
+/** element, id, keyName을 받아서 element.id를 id-uuid로 설정하고 크롬 스토리지에 keyName 키 값으로 uuid를 저장 */
+function setStorageElementID(element, id, keyName) {
+  const uuid = generateUUIDv4();
+  element.id = `${id}-${uuid}`;
+  chrome.storage.local.set({ [keyName]: uuid });
+}
+
+/** keyName, id 받아서 'id-{keyName에 저장된 벨류}'라는 id를 가진 element가 있으면 해당 element 삭제 */
+function deleteElementIfExist(id, keyName) {
+  chrome.storage.local.get(keyName, (result) => {
+    const element = document.getElementById(`${id}-${result[keyName]}`);
+    if (element) {
+      element.remove();
+    }
+  });
 }
 
 function generateUUIDv4() {
